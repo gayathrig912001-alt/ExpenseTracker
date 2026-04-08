@@ -34,18 +34,24 @@ public class JwtTokenValidator extends OncePerRequestFilter{
 		String authToken = request.getHeader("Authorization");
 		String token = null;
 		String userName = null;
-		if(!authToken.isBlank() && authToken.startsWith("Bearer ")) {
-			token = authToken.substring(7);
-			userName = jwtUtil.extractUserName(token);
-		}
-		if(!userName.isBlank() && SecurityContextHolder.getContext().getAuthentication() == null) {
-			UserDetails userDetails = userService.loadUserByUsername(userName);
-			if(jwtUtil.validateUserName(userName, userDetails, token)) {
-				UsernamePasswordAuthenticationToken userNamePasswordToken = new UsernamePasswordAuthenticationToken(
-						userName, userDetails);
-				userNamePasswordToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-				SecurityContextHolder.getContext().setAuthentication(userNamePasswordToken);
+		try {
+			if(!authToken.isBlank() && authToken.startsWith("Bearer ")) {
+				token = authToken.substring(7);
+				userName = jwtUtil.extractUserName(token);
 			}
+			if(!userName.isBlank() && SecurityContextHolder.getContext().getAuthentication() == null) {
+				UserDetails userDetails = userService.loadUserByUsername(userName);
+				if(jwtUtil.validateUserNameAndToken(userName, userDetails, token)) {
+					UsernamePasswordAuthenticationToken userNamePasswordToken = new UsernamePasswordAuthenticationToken(
+							userName, userDetails);
+					userNamePasswordToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+					SecurityContextHolder.getContext().setAuthentication(userNamePasswordToken);
+				}
+			}
+		}catch(Exception e) {
+			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			response.getWriter().write(e.getMessage());
+			return;
 		}
 		filterChain.doFilter(request, response);
 	}

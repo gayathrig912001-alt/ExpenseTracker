@@ -16,6 +16,10 @@ public class UserResponseDto {
 	
 	private Date updated_at;
 
+	public UserResponseDto() {
+		super();
+	}
+
 	public Long getId() {
 		return id;
 	}
@@ -63,5 +67,4 @@ public class UserResponseDto {
 	public void setUpdated_at(Date updated_at) {
 		this.updated_at = updated_at;
 	}
-	
 }

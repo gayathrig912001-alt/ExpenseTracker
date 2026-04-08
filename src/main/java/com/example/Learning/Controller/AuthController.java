@@ -1,12 +1,15 @@
 package com.example.Learning.Controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.Learning.Dto.JwtTokenDto;
 import com.example.Learning.Dto.UserResponseDto;
 import com.example.Learning.Dto.UserSigninDto;
 import com.example.Learning.Service.UserService;
@@ -25,18 +28,23 @@ public class AuthController {
 	private JwtUtil jwtUtil;
 	
 	@PostMapping("/api/signin")
-	public UserResponseDto signinUser(@RequestBody UserSigninDto user) {
-		return userService.signin(user);
+	public ResponseEntity<UserResponseDto> signinUser(@RequestBody UserSigninDto user) {
+		UserResponseDto userResponseDto = userService.signin(user);
+		return ResponseEntity.ok(userResponseDto);
 	}
 	
 	@PostMapping("/api/login")
-	public String loginUser(@RequestBody UserSigninDto user) {
+	public ResponseEntity<JwtTokenDto> loginUser(@RequestBody UserSigninDto user) {
 		try {
 		authenticationManager.authenticate(new UsernamePasswordAuthenticationToken
-				(user.getName(), user.getPassword()));
+				(user.getEmail(), user.getPassword()));
 		}catch(Exception e) {
 			throw e;
 		}
-		return jwtUtil.generateToken(user.getName());
+		String token = jwtUtil.generateToken(user.getEmail());
+		UserResponseDto userResponseDto = new UserResponseDto();
+		userResponseDto.setName(user.getEmail());
+		JwtTokenDto tokenDto = new JwtTokenDto(HttpStatus.OK.getReasonPhrase(), token, userResponseDto);
+		return ResponseEntity.ok(tokenDto);
 	}
 }

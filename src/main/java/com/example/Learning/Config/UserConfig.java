@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -34,9 +35,9 @@ public class UserConfig {
 	    .httpBasic(basic -> basic.disable()) 
 		.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/signin","/api/login","/api/expense").permitAll()
-                .anyRequest().authenticated());
-		http.addFilterBefore(jwtTokenValidator, UsernamePasswordAuthenticationFilter.class);
-		//.formLogin(Customizer.withDefaults());
+                .anyRequest().authenticated())
+				.addFilterBefore(jwtTokenValidator, UsernamePasswordAuthenticationFilter.class)
+				.formLogin(Customizer.withDefaults());
 		return http.build();
 	}
 

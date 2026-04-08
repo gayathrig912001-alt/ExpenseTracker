@@ -1,6 +1,7 @@
 package com.example.Learning.Service;
 
 import java.util.Date;
+import java.util.Optional;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,9 @@ public class UserService implements UserDetailsService{
 	private PasswordEncoder passwordEncoder;
 	
 	public UserResponseDto signin(UserSigninDto userDto) {
+		if(userRepository.existsByEmail(userDto.getEmail())) {
+			throw new RuntimeException("Usere Already exists. Please login");
+		}
 		UserEntity userEntity = new UserEntity();
 		userEntity.setUserName(userDto.getName());
 		userEntity.setPhone_no(userDto.getPhone_no());
@@ -39,11 +43,11 @@ public class UserService implements UserDetailsService{
 	}
 
 	public UserResponseDto login(UserSigninDto userDto) {
-		UserEntity user = userRepository.findByEmail(userDto.getEmail());
+		Optional<UserEntity> user = userRepository.findByEmail(userDto.getEmail());
 		if(user == null) {
 			throw new RuntimeException("User Not Found");
 		}
-		if(!passwordEncoder.matches(userDto.getPassword(), user.getPassword())) {
+		if(!passwordEncoder.matches(userDto.getPassword(), user.get().getPassword())) {
 			throw new RuntimeException("Invalid Password");
 		}
 		UserResponseDto userResponseDto = new UserResponseDto();
@@ -53,7 +57,7 @@ public class UserService implements UserDetailsService{
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		UserEntity user =  userRepository.findByUsername(username)
+		UserEntity user =  userRepository.findByEmail(username)
 				.orElseThrow(()->new UsernameNotFoundException("User Not Found"));
 		
 		return org.springframework.security.core.userdetails.User
